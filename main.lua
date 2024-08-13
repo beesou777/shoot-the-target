@@ -52,7 +52,7 @@ function love.mousepressed(x, y, button, istouch, presses)
             score = score + 1
             target.x = math.random(target.radius, love.graphics.getWidth() - target.radius)
             target.y = math.random(target.radius, love.graphics.getHeight() - target.radius)
-        elseif score >= 1 then
+        else
             score = score -1
         end
     elseif button == 1 and gameState == 1 then
