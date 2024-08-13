@@ -1,50 +1,67 @@
-
-local square = {}
-square.size = 50
-square.x = math.random(0, 800 - square.size)
-square.y = math.random(0, 600 - square.size)
-square.speed = 200
-
-local score = 0
-local time_remaining = 10
-local game_over = false
-
 function love.load()
-    love.window.setTitle("Catch the Square")
+    love.window.setTitle("Shooting game")
     love.window.setMode(800, 600)
+
+    target = {}
+    target.x = 300
+    target.y = 300
+    target.radius = 50
+    score = 0
+    timer = 0
+    gameFont = love.graphics.newFont(20)
+
+    gameState = 1
+
+    sprites = {}
+    sprites.sky = love.graphics.newImage("sprites/sky.png")
+    sprites.target = love.graphics.newImage("sprites/target.png")
+    sprites.crosshairs = love.graphics.newImage("sprites/crosshairs.png")
 end
 
 function love.update(dt)
-    if game_over then
-        return
+    if timer > 0 then
+        timer = timer - dt
     end
 
-    time_remaining = time_remaining - dt
-
-    if time_remaining <= 0 then
-        game_over = true
+    if timer < 0 then
+        timer = 0
+        gameState = 1
     end
 end
 
 function love.draw()
-    if game_over then
-        love.graphics.printf("Game Over! Final Score: " .. score, 0, 250, 800, "center")
+    love.graphics.draw(sprites.sky, 0, 0)
+    love.graphics.setColor(255, 255, 255)
+    love.graphics.setFont(gameFont)
+    love.graphics.print("Score: " .. score, 10, 10)
+    love.graphics.print("Timer: " .. math.ceil(timer), 10, 30)
+
+    if gameState == 2 then
+        love.graphics.draw(sprites.target, target.x - target.radius, target.y - target.radius)
+        love.graphics.draw(sprites.crosshairs, love.mouse.getX() - 20, love.mouse.getY() - 20)
     else
-        love.graphics.setColor(1, 0, 0) -- Red color
-        love.graphics.rectangle("fill", square.x, square.y, square.size, square.size)
-        love.graphics.setColor(1, 1, 1) -- White color
-        love.graphics.print("Score: " .. score, 10, 10)
-        love.graphics.print("Time: " .. math.ceil(time_remaining), 700, 10)
+        love.graphics.printf("Score: " .. score, 0, 250, love.graphics.getWidth(), "center")
+        love.graphics.printf("Click anywhere to start", 0, 300, love.graphics.getWidth(), "center")
     end
 end
 
 function love.mousepressed(x, y, button, istouch, presses)
-    if button == 1 and not game_over then
-        if x >= square.x and x <= square.x + square.size and y >= square.y and y <= square.y + square.size then
+    if button == 1 and gameState == 2 then
+        local mouseToTarget = distanceBetween(x, y, target.x, target.y)
+        if mouseToTarget < target.radius then
             score = score + 1
-            square.x = math.random(0, 800 - square.size)
-            square.y = math.random(0, 600 - square.size)
-            square.speed = square.speed + 50
+            target.x = math.random(target.radius, love.graphics.getWidth() - target.radius)
+            target.y = math.random(target.radius, love.graphics.getHeight() - target.radius)
+        elseif score >= 1 then
+            score = score -1
         end
+    elseif button == 1 and gameState == 1 then
+        gameState = 2
+        timer = 10
+        score = 0
     end
+end
+
+function distanceBetween(x1, y1, x2, y2)
+    return math.sqrt((x2 - x1) ^ 2 + (y2 - y1) ^ 2)
 end
